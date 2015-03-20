@@ -1,0 +1,15 @@
+{
+  "name": "node-sensu-plugins",
+  "version": "0.0.1",
+  "description": "Sensu plugins written in Node.js",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:electronifie/node-sensu-plugins.git"
+  },
+  "author": "anthony.schneider@electronifie.com",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb":"^1.4.34"
+  }
+}
