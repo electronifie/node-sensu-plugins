@@ -9,13 +9,15 @@ program
   .option('-H, --hostname <hostname>', 'Server hostname')
   .option('-P, --port <port>', 'Server port')
   .option('-S, --scheme <scheme>', 'Scheme')
+  .option('-d, --debug', 'Debug mode - write extra info to stderr')
   .parse(process.argv);
-//if (program.args.length === 0) { program.help(); }
 
+// Handle arguments
 var hostname = program.hostname ? program.hostname : "localhost",
-  port = program.port ? program.port : 27017;
-
-var creds = !program.username ? "" : program.username + (program.password ? '/'+program.password+'@' : '@');
+  port = program.port ? program.port : 27017,
+  creds = !program.username ? "" : program.username + (program.password ? '/'+program.password+'@' : '@'),
+  scheme = program.scheme ? program.scheme : 'mongodb';
+  debugEnabled = program.debug ? true : false;
 
 // Connection URL
 var url = 'mongodb://'+creds+hostname+':'+port;
@@ -25,12 +27,22 @@ var MongoClient = require('mongodb').MongoClient
 
 var timestamp = new Date().getTime();
 
+// Writes scheme.prop.resul.timestamp to stdout
 function log(p, v) {
-  console.log(program.scheme+'.'+p+'.'+v+'.'+timestamp);
+  console.log(scheme+'.'+p+'.'+v+'.'+timestamp);
 }
 
+function logDebug(s) { if (debugEnabled) console.error(s); }
+
+// Utility to evaluate dot-notation path of object properties/subproperties
+function evalPath(obj, path) {
+  return path.split('.').reduce(function(o, i) { return o[i];}, obj);
+}
+
+// Define the properties that you want to monitor here.  These are all from the results of db.serverStatus() run
+// form a mongo shell (or db.admin().serverStatus() from Node.js);
 var props = [
-  'ok',
+  'ok', // basically just confirming that serverStatus() was executed correctly
   'globalLock.totalTime',
   'globalLock.currentQueue.total',
   'globalLock.currentQueue.readers',
@@ -45,13 +57,14 @@ var props = [
   'asserts.warning',
   'cursors.totalOpen',
   'cursors.totalNoTimeout',
-  'cursors.timedOut',
+  'cursors.timedOut'
 ];
 
-// Use connect method to connect to the Server
+// Connect and run everything
+logDebug("Attempting to connect to "+url);
 MongoClient.connect(url, function(err, db) {
   assert.equal(null, err);
-  //console.log("Connected correctly to server");
+  logDebug("Connected correctly to "+url);
 
   db.admin().serverStatus(function(err, result) {
     var obj = {};
@@ -59,9 +72,16 @@ MongoClient.connect(url, function(err, db) {
     assert.equal(err, null);
 
     props.forEach(function(p) {
-      log(p, eval('result.'+p));
+      var res = evalPath(result, p);
+      logDebug("Property '"+p+"' returned: "+res);
+      if (typeof res !== 'undefined') {
+        log(p, res); 
+      } else {
+        logDebug("Ignoring undefined result for "+p);
+      }
     });
 
+    logDebug("Closing connection to "+url);
     db.close();
   });
 });

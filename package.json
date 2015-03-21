@@ -10,6 +10,7 @@
   "author": "anthony.schneider@electronifie.com",
   "license": "ISC",
   "dependencies": {
-    "mongodb":"^1.4.34"
+    "commander": "^2.7.1",
+    "mongodb": "^1.4.34"
   }
 }
