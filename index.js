@@ -29,7 +29,7 @@ var timestamp = new Date().getTime();
 
 // Writes scheme.prop.resul.timestamp to stdout
 function log(p, v) {
-  console.log(scheme+'.'+p+'.'+v+'.'+timestamp);
+  console.log(scheme+'.'+p+' '+v+' '+timestamp);
 }
 
 function logDebug(s) { if (debugEnabled) console.error(s); }
@@ -60,12 +60,7 @@ var props = [
   'cursors.timedOut'
 ];
 
-// Connect and run everything
-logDebug("Attempting to connect to "+url);
-MongoClient.connect(url, function(err, db) {
-  assert.equal(null, err);
-  logDebug("Connected correctly to "+url);
-
+function processMetrics(db) {
   db.admin().serverStatus(function(err, result) {
     var obj = {};
 
@@ -84,5 +79,21 @@ MongoClient.connect(url, function(err, db) {
     logDebug("Closing connection to "+url);
     db.close();
   });
+}
+
+// Connect and run everything
+logDebug("Attempting to connect to "+url);
+MongoClient.connect(url, function(err, db) {
+  assert.equal(null, err);
+  logDebug("Connected correctly to "+url);
+  if (program.username) {
+    db.authenticate(program.username, program.password, function(err, authres) {
+      assert.equal(err, null);
+      assert.equal(authres, true);
+      processMetrics(db);
+    });
+  } else {
+    processMetrics(db);
+  }
 });
 
