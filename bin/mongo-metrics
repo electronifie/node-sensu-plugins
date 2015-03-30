@@ -64,7 +64,12 @@ function processMetrics(db) {
   db.admin().serverStatus(function(err, result) {
     var obj = {};
 
-    assert.equal(err, null);
+    if (err) {
+      console.error("db.admin().getServerStatus() failed:");
+      console.error(err);
+      if(db) db.close(true);
+      process.exit(1);
+    }
 
     props.forEach(function(p) {
       var res = evalPath(result, p);
@@ -84,12 +89,22 @@ function processMetrics(db) {
 // Connect and run everything
 logDebug("Attempting to connect to "+url);
 MongoClient.connect(url, function(err, db) {
-  assert.equal(null, err);
+  if (err) {
+    console.error("Connect failed:");
+    console.error(err);
+    if(db) db.close(true);
+    process.exit(1);
+  }
+
   logDebug("Connected correctly to "+url);
   if (program.username) {
     db.authenticate(program.username, program.password, function(err, authres) {
-      assert.equal(err, null);
-      assert.equal(authres, true);
+      if (err || !authres) {
+        console.error("Authentication failed:");
+        console.error(err);
+        if (db) db.close(true);
+        process.exit(1);
+      }
       processMetrics(db);
     });
   } else {
