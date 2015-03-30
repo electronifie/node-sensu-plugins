@@ -10,7 +10,11 @@
   "author": "anthony.schneider@electronifie.com",
   "license": "ISC",
   "dependencies": {
+    "amqp-stats": "0.0.14",
     "commander": "^2.7.1",
-    "mongodb": "^1.4.34"
+    "debug": "^2.1.1",
+    "mongodb": "^1.4.34",
+    "url": "^0.10.3",
+    "util": "^0.10.3"
   }
 }
