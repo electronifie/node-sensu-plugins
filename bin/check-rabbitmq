@@ -63,7 +63,7 @@ var returnCode = 0;
 // Array containing critical/warning hits.
 var returnMEssages = [];
 
-//  See if the given queue matches any of our rules.  Return after first match.
+//  See if the given queue matches any of our rules.  Return after first match.  Ignore values < 0.
 function matchQueue(queue) {
   for (var i = 0; i < config.rules.length; i++) {
     var rule = config.rules[i];
@@ -71,13 +71,13 @@ function matchQueue(queue) {
       logDebug(queue.name+" matched rule: ");
       logDebug(rule);
       logDebug("messages: "+queue.messages);
-      if (queue.messages >= rule[2]) {
+      if (rule[2] >= 0 && queue.messages >= rule[2]) {
         returnCode = Math.max(returnCode, 2);
-        console.log(util.format("CRITICAL %s messages %d > %d", queue.name, queue.messages, rule[2]));
+        console.log(util.format("CRITICAL %s messages %d >= %d", queue.name, queue.messages, rule[2]));
         returnCode = 2;
-      } else if (queue.messages >= rule[1]) {
+      } else if (rule[1] >= 0 && queue.messages >= rule[1]) {
         returnCode = Math.max(returnCode, 1);
-        console.log(util.format("WARNING %s messages %d > %d", queue.name, queue.messages, rule[1]));
+        console.log(util.format("WARNING %s messages %d >= %d", queue.name, queue.messages, rule[1]));
       }
     }
   }
