@@ -68,7 +68,7 @@ function matchQueue(queue) {
   for (var i = 0; i < config.rules.length; i++) {
     var rule = config.rules[i];
     if (queue.name.match(rule[0])) {
-      logDebug(queue.name+" matched rule: ");
+      logDebug(queue.name+" matched pattern in rule: ");
       logDebug(rule);
       logDebug("messages: "+queue.messages);
       if (rule[2] >= 0 && queue.messages >= rule[2]) {
