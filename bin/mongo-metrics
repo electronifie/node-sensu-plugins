@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var program = require('commander');
+var os = require('os');
 
 program
   .version('0.0.1')
@@ -16,7 +17,7 @@ program
 var hostname = program.hostname ? program.hostname : "localhost",
   port = program.port ? program.port : 27017,
   creds = !program.username ? "" : program.username + (program.password ? '/'+program.password+'@' : '@'),
-  scheme = program.scheme ? program.scheme : 'mongodb';
+  scheme = program.scheme ? program.scheme : os.hostname().split('.')[0],
   debugEnabled = program.debug ? true : false;
 
 // Connection URL
@@ -29,7 +30,7 @@ var timestamp = new Date().getTime();
 
 // Writes scheme.prop.resul.timestamp to stdout
 function log(p, v) {
-  console.log(scheme+'.'+p+'\t'+v+'\t'+timestamp);
+  console.log(scheme+'.mongodb.'+p+'\t'+v+'\t'+timestamp);
 }
 
 function logDebug(s) { if (debugEnabled) console.error(s); }
