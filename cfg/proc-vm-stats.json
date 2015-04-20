@@ -1,0 +1,5 @@
+{"rules":[
+  ["beam.*rabbitmq_server", "rabbitmq", ["VmSize", "VmRSS", "VmSwap"]],
+  [".*", "", ["VmSize", "VmRSS", "VmSwap"]]
+]}
+

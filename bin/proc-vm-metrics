@@ -1,0 +1,146 @@
+#!/usr/bin/env node
+
+/*eslint-env node */
+/*eslint-disable eol-last,no-trailing-spaces,dot-notation */
+
+"use strict";
+
+var program = require("commander");
+var fs = require("fs");
+var glob = require("glob");
+var path = require("path");
+var os = require("os");
+
+program
+  .version("0.0.1")
+  .option("-f, --config <config>", "Configuration file")
+  .option("-d, --debug", "Debug mode - write extra info to stderr")
+  .option("-S, --scheme <scheme>", "Scheme name - prepend output with scheme name")
+  .parse(process.argv);
+
+var debugEnabled = program.debug ? true : false;
+var scheme = program.scheme ? program.scheme : os.hostname().split(".")[0];
+
+// results[procName][key]
+var results = {};
+
+// Parse our rule config file.  Should be of the form [ regexp, name, [fieldList]], where fieldList fields are any of VMSize, VMRSS, VMSwap
+var configFile = program.config;
+var config = {};
+if (!configFile) {
+  program.help();
+  process.exit(1); 
+} else {
+  try {
+    config = JSON.parse(fs.readFileSync(configFile, "utf8"));
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
+}
+
+var timestamp = new Date().getTime();
+
+// Writes scheme.prop.result.timestamp to stdout
+function log(p, v) {
+  console.log(p + " " + v + " " + timestamp);
+}
+
+function logDebug(s) { if (debugEnabled) { console.error(s); } }
+
+// Pull out VMSize, VMRSS, VMSwap from /proc/*/status file
+function readProcStatus(statusPath) {
+  var data = fs.readFileSync(statusPath, "utf8");
+  var lines = data.split("\n");
+  var obj = {};
+
+  logDebug("Matching lines for VM values");
+  lines.forEach(function(line) {
+    if (line.match(/^VmSize/) || line.match(/^VmRSS/) || line.match(/^VmSwap/)) {
+      var vals = line.split(/\s+/);
+      obj[vals[0].replace(":", "")] = vals[1];
+    }
+  });
+  return obj;
+}
+
+function match(cmdline, cmdlineFile) {
+  var pid = cmdlineFile.split("/")[2];
+  var procStatus = readProcStatus("/proc/" + pid + "/status");
+  var matched = false;
+  
+  logDebug("procStatus: " + JSON.stringify(procStatus));
+  config.rules.forEach(function(rule) {
+    logDebug("Processing rule: " + JSON.stringify(rule));
+    if (matched) { return; }
+
+    if (rule.length !== 3) {
+      console.error("Invalid rule: " + JSON.stringify(rule));
+      process.exit(1);
+    }
+    
+    var pattern = rule[0];
+    var mapping = rule[1];
+    var keys = rule[2];
+    logDebug("keys: " + JSON.stringify(keys));
+
+    if (cmdline.match(pattern)) {
+      logDebug("Match pattern " + pattern + "for cmdline " + cmdline);
+      var cmd = "";
+      
+      if (!mapping || mapping.length === 0) {
+        // XXX - do funky replacing like in the Ruby proc-status-metrics?
+        // cmd = cmdline.replace(/\//g, "_").replace(/-/g, "").replace(/ /g, "_")
+        cmd = path.basename(cmdline.split(" ")[0]).replace(/:/g, "");
+      } else {
+        cmd = mapping;
+      }
+
+      if (keys) {
+        logDebug("keys");
+        keys.forEach(function(key) {
+          logDebug(procStatus);
+          logDebug("key: " + key + ", procStatus[key]: " + procStatus[key]);
+          if (key in procStatus) {
+            logDebug("got procStatus[key]");
+
+            // Create new table entry for cmd and just initialize everything to 0 even if it's not in a rule
+            // TODO: This should be generalized for other values in /proc/PID/status
+
+            logDebug("Got procStatus[key]");
+            if (!(cmd in results)) {
+              results[cmd] = { VmSize: 0, VmRSS: 0, VmSwap: 0 };
+            }
+            results[cmd][key] += parseInt(procStatus[key]);
+            logDebug("Adding " + parseInt(procStatus[key]) + " to " + cmd + "[" + key + "]");
+            logDebug("Added %s, %s, %d", cmd, key, procStatus[key]);
+          }
+        }); // keys.forEach()
+        
+        // Matched rule.  Return before processing more.
+        logDebug("leaving");
+        matched = true;
+        return;
+      }
+    }
+  }); // config.rules.forEach()
+}
+
+glob("/proc/*/cmdline", function(err, res) {
+  if(err) { throw err; }
+  res.forEach(function(cmdlineFile) {
+    var cmdline = fs.readFileSync(cmdlineFile, "utf8").replace(/\u0000/g, " ");
+    match(cmdline, cmdlineFile);
+    logDebug("cmdlineFile: " + cmdlineFile + ", cmdline: " + cmdline);
+  });
+
+  var keys = Object.keys(results);
+  keys.forEach(function (key) {
+    (["VmSize", "VmRSS", "VmSwap"]).forEach(function(prop) {
+      log(scheme + "." + key + "." + prop, results[key][prop]);
+    });
+  });
+});
+
+
+
