@@ -127,11 +127,17 @@ function match(cmdline, cmdlineFile) {
 }
 
 glob("/proc/*/cmdline", function(err, res) {
-  if(err) { throw err; }
+  if(err) { 
+   // nothing
+  }
   res.forEach(function(cmdlineFile) {
-    var cmdline = fs.readFileSync(cmdlineFile, "utf8").replace(/\u0000/g, " ");
-    match(cmdline, cmdlineFile);
-    logDebug("cmdlineFile: " + cmdlineFile + ", cmdline: " + cmdline);
+    try {
+      var cmdline = fs.readFileSync(cmdlineFile, "utf8").replace(/\u0000/g, " ");
+      match(cmdline, cmdlineFile);
+      logDebug("cmdlineFile: " + cmdlineFile + ", cmdline: " + cmdline);
+    } catch (e) {
+      logDebug(e);
+    }
   });
 
   var keys = Object.keys(results);
