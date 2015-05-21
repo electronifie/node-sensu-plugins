@@ -101,6 +101,7 @@ function processRule(rule) {
             }
 
             // Everything's good.
+            console.log("OK");
             process.exit(0);
           });
         } else {
@@ -113,6 +114,7 @@ function processRule(rule) {
               }
 
               // Everything's good.
+              console.log("OK");
               process.exit(0);
             });
           } else {
