@@ -1,0 +1,13 @@
+{
+  "name": "Run echo",
+  "cmd": "echo hello",
+  "outputFilePrefix": "/tmp/check_echo",
+  "warnTime": 5,
+  "criticalTime": 10,
+  "validTime": {
+      "startTime":"",
+      "endTime":"",
+      "weekdaysOnly": true
+  }
+}
+
