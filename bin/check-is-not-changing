@@ -110,10 +110,10 @@ function processRule(rule) {
           } else {
             delta = now - res.mtime;
             if (delta > rule.criticalTime) {
-              console.log(util.format("CRITICAL '%s' has not changed in %d seconds", rule.name, delta));
+              console.log(util.format("CRITICAL '%s' has not changed in %d seconds", rule.name, delta.toFixed(0)));
               process.exit(2);
             } else if (delta > rule.warnTime) {
-              console.log(util.format("WARNING '%s' has not changed in %d seconds", rule.name, delta));
+              console.log(util.format("WARNING '%s' has not changed in %d seconds", rule.name, delta.toFixed(0)));
               process.exit(1);
             }
           }
