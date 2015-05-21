@@ -1,6 +1,6 @@
 {
   "name": "node-sensu-plugins",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Sensu plugins written in Node.js",
   "main": "index.js",
   "repository": {
@@ -12,10 +12,10 @@
   "dependencies": {
     "amqp-stats": "0.0.14",
     "commander": "^2.7.1",
+    "crypto": "0.0.3",
+    "glob": "~5.0.5",
     "mongodb": "^1.4.34",
     "url": "^0.10.3",
-    "util": "^0.10.3",
-    "glob": "~5.0.5"
+    "util": "^0.10.3"
   }
 }
-
