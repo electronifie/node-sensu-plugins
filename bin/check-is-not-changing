@@ -29,6 +29,14 @@ if (!configFile) {
   config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
 }
 
+// TODO:  Add time ranges in config file, like:
+//  "validTime": {
+//      "startTime":"",
+//      "endTime":"",
+//      "weekdaysOnly": true
+//  }
+
+
 logDebug(util.format("Got config: %s", JSON.stringify(config)));
 
 // Takes file path and callback(err, data, mtime)
