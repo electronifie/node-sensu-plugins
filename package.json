@@ -1,6 +1,6 @@
 {
   "name": "node-sensu-plugins",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Sensu plugins written in Node.js",
   "main": "index.js",
   "repository": {
