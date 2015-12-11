@@ -30,8 +30,7 @@ var timestamp = new Date().getTime();
 
 // Writes scheme.prop.resul.timestamp to stdout
 function log(p, v) {
-  console.log(scheme+'.mongodb.'+p+' '+v+' '+timestamp);
-  console.log();
+  console.log(scheme+'.mongodb.'+p+' '+v+' '+timestamp+"\n");
 }
 
 function logDebug(s) { if (debugEnabled) console.error(s); }
@@ -41,31 +40,32 @@ function evalPath(obj, path) {
   return path.split('.').reduce(function(o, i) { return o[i];}, obj);
 }
 
-// Define the properties that you want to monitor here.  These are all from the results of db.serverStatus() run
-// form a mongo shell (or db.admin().serverStatus() from Node.js);
-var props = [
-  'ok', // basically just confirming that serverStatus() was executed correctly
-  'globalLock.totalTime',
-  'globalLock.currentQueue.total',
-  'globalLock.currentQueue.readers',
-  'globalLock.currentQueue.writers',
-  'globalLock.activeClients.total',
-  'globalLock.activeClients.readers',
-  'globalLock.activeClients.writers',
-  'extra_info.page_faults',
-  'mem.resident',
-  'mem.virtual',
-  'mem.mapped',
-  'asserts.warning',
-  'cursors.totalOpen',
-  'cursors.totalNoTimeout',
-  'cursors.timedOut'
-];
+// Recurse through an object and return an array of { name, val } objects where name is the dot path
+// and val is the number value or 1|0 for true|false.  Ignore string and array values.
+function recprop(prefix, obj, results) {
+  // Can't produce metrics from string, and we really shouldn't have arrays in here
+  if (typeof obj === "string" || obj instanceof Array) { return results; }
 
-function processMetrics(db) {
+  // convert booleans to 1 or 0 for metrics
+  else if (typeof obj === "boolean") { return results.push({ name: prefix, val: obj ? 1 : 0 }); }
+
+  // got a number, just return that
+  else if (typeof obj === "number") { return results.push({ name: prefix, val: obj }); }
+
+  // must have an object...recurse through proerties
+  else {
+    Object.keys(obj).forEach(function(k) {
+      if (k !== "wiredTiger") {
+        var res = recprop((prefix ? prefix + "." + k : k), obj[k], results);
+        results.concat(res);
+      }
+    });
+  }
+  return results;
+}
+
+function processStatus(db) {
   db.admin().serverStatus(function(err, result) {
-    var obj = {};
-
     if (err) {
       console.error("db.admin().getServerStatus() failed:");
       console.error(err);
@@ -73,14 +73,8 @@ function processMetrics(db) {
       process.exit(1);
     }
 
-    props.forEach(function(p) {
-      var res = evalPath(result, p);
-      logDebug("Property '"+p+"' returned: "+res);
-      if (typeof res !== 'undefined') {
-        log(p, res); 
-      } else {
-        logDebug("Ignoring undefined result for "+p);
-      }
+    recprop(null, result, []).forEach(function(obj) {
+      log(obj.name, obj.val);
     });
 
     logDebug("Closing connection to "+url);
@@ -107,10 +101,11 @@ MongoClient.connect(url, function(err, db) {
         if (db) db.close(true);
         process.exit(1);
       }
-      processMetrics(db);
+      processStatus(db);
     });
   } else {
-    processMetrics(db);
+    processStatus(db);
   }
 });
+
 
