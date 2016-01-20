@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+
+var async = require("async");
+var cheerio = require("cheerio");
+var fs = require('fs');
+var program = require('commander');
+var request = require("superagent");
+var util = require("util");
+
+var url = "http://localhost:9111";
+
+program
+  .version('0.0.1')
+  .option('-f, --config [config]', 'Configuration file')
+  .option('-d, --debug', 'Debug mode')
+  .parse(process.argv);
+
+// Handle arguments
+if (!program.config) { program.help();  process.exit(1); }
+
+function logDebug(str) {
+  if (!!program.debug) {
+    console.warn(str);
+  }
+}
+
+var config = JSON.parse(fs.readFileSync(program.config, "utf8"));
+
+// Naively expect these exact columns
+var cols = [ "Session", "ConnectionType", "Enabled", "Session Time", "Logged On", "Next Incoming", "Next Outgoing" ];
+
+var returnCode = 0;
+
+// Tally up results here
+var results = {};
+
+config.patterns.forEach(function(p) {
+  results[p.pattern] = { expected: p.expectedLoggedOn, minWarn: p.minWarn, found: 0 };
+});
+
+logDebug(results);
+
+function parseLoggedIn(text) {
+  var $ = cheerio.load(text);
+  var res = [];
+  var name, loggedIn;
+
+  $('tr').each(function(i, elem) {
+    var c = $(this).children();
+    
+    if ($(c[i]).text() !== "Session") { // Skip header row
+      name = $(c[0]).text();
+      loggedIn = $(c[4]).text() === "yes" ? 1 : 0;
+      res.push({ name: name, loggedIn: loggedIn });
+    }
+  });
+
+  logDebug(res);
+  return res;
+}
+
+async.map(config.urls, request.get, function(err, res) {
+  if (err) { 
+    console.error(err); 
+    process.exit(2);
+  }
+
+  var loggedIn = [];
+  res.forEach(function(r) {
+    loggedIn.push(parseLoggedIn(r.text));
+  });
+
+  loggedIn.forEach(function(items) {
+    items.forEach(function(item) {
+      config.patterns.forEach(function(p) {
+        if (item.name.match(p.pattern)) {
+          results[p.pattern].found += item.loggedIn;
+        }
+      });
+    });
+  });
+
+  Object.keys(results).forEach(function(k) {
+    if (results[k].found === 0) {
+      returnCode = 2;
+      console.log(util.format("CRITICAL %s loggedIn == 0", k));
+    } else if (results[k].found < results[k].expected && results[k].found >= results[k].minWarn) {
+      returnCode = Math.max(process.exitCode, 1);
+      console.log(util.format("WARNING %s loggedIn %d < %d", k, results[k].found, results[k].expected));
+    }
+  });
+  
+  logDebug(results);
+  process.exit(returnCode);
+});
+
