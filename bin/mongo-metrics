@@ -30,7 +30,7 @@ var timestamp = new Date().getTime();
 
 // Writes scheme.prop.resul.timestamp to stdout
 function log(p, v) {
-  console.log(scheme+'.mongodb.'+p+' '+v+' '+timestamp+"\n");
+  console.log(scheme+'.mongodb.'+p+' '+v+' '+timestamp);
 }
 
 function logDebug(s) { if (debugEnabled) console.error(s); }
