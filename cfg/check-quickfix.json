@@ -1,0 +1,7 @@
+{
+  "urls": [ "http://localhost:9111" ],
+  "patterns": [
+    { "pattern": "FIX.4.4.*", "expectedLoggedOn": 5, "minWarn": 3 }
+  ]
+}
+
