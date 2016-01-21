@@ -1,13 +1,13 @@
 {
   "name": "node-sensu-plugins",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Sensu plugins written in Node.js",
   "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git@github.com:electronifie/node-sensu-plugins.git"
   },
-  "author": "anthony.schneider@electronifie.com",
+  "author": "opensource@electronifie.com",
   "license": "Apache-2.0",
   "dependencies": {
     "amqp-stats": "0.0.14",
@@ -21,5 +21,12 @@
     "mongodb": "^2.1.0",
     "superagent": "^1.7.0",
     "url": "^0.10.3"
+  },
+  "bin": {
+    "check-is-not-changing": "./bin/check-is-not-changing",
+    "check-quickfix": "./bin/check-quickfix",
+    "check-rabbitmq": "./bin/check-rabbitmq",
+    "mongo-metrics": "./bin/mongo-metrics",
+    "proc-vm-metrics": "./bin/proc-vm-metrics"
   }
 }
