@@ -4,8 +4,9 @@
 var program = require("commander");
 var fs = require("fs");
 var util = require("util");
-var crypto = require('crypto');
+var crypto = require("crypto");
 var exec = require("child_process").exec;
+var officehours = require("officehours");
 
 var now = new Date().getTime() / 1000; // unix time in seconds
 
@@ -29,13 +30,10 @@ if (!configFile) {
   config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
 }
 
-// TODO:  Add time ranges in config file, like:
-//  "validTime": {
-//      "startTime":"",
-//      "endTime":"",
-//      "weekdaysOnly": true
-//  }
-
+if (config.officehours && !officehours(config.officehours)) {
+  console.log("After hours");
+  process.exit(0);
+}
 
 logDebug(util.format("Got config: %s", JSON.stringify(config)));
 

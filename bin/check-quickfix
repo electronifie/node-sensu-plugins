@@ -3,6 +3,7 @@
 var async = require("async");
 var cheerio = require("cheerio");
 var fs = require('fs');
+var officehours = require("officehours");
 var program = require('commander');
 var request = require("superagent");
 var util = require("util");
@@ -25,6 +26,11 @@ function logDebug(str) {
 }
 
 var config = JSON.parse(fs.readFileSync(program.config, "utf8"));
+
+if (config.officehours && !officehours(config.officehours)) {
+  console.log("After hours");
+  process.exit(0);
+}
 
 // Naively expect these exact columns
 var cols = [ "Session", "ConnectionType", "Enabled", "Session Time", "Logged On", "Next Incoming", "Next Outgoing" ];

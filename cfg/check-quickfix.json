@@ -2,6 +2,13 @@
   "urls": [ "http://localhost:9111" ],
   "patterns": [
     { "pattern": "FIX.4.4.*", "expectedLoggedOn": 5, "minWarn": 3 }
+  ],
+  "officehours": [
+    { 
+      "days": [ 1,2,3,4,5 ],
+      "startTime": { "h": 7, "m": 0 }, 
+      "endTime": { "h": 17, "m": 0 }
+    }
   ]
 }
 

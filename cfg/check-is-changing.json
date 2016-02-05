@@ -3,6 +3,13 @@
   "cmd": "echo hello",
   "outputFilePrefix": "/tmp/check_echo",
   "warnTime": 5,
-  "criticalTime": 10
+  "criticalTime": 10,
+  "officehours": [
+    { 
+      "days": [ 1,2,3,4 ],
+      "startTime": { "h": 7, "m": 0 }, 
+      "endTime": { "h": 17, "m": 0 }
+    }
+  ]
 }
 

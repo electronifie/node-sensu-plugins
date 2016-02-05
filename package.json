@@ -1,6 +1,6 @@
 {
   "name": "node-sensu-plugins",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Sensu plugins written in Node.js",
   "main": "index.js",
   "repository": {
@@ -19,6 +19,7 @@
     "glob": "~5.0.5",
     "kerberos": "~0.0",
     "mongodb": "^2.1.0",
+    "officehours": "~0.0",
     "superagent": "^1.7.0",
     "url": "^0.10.3"
   },
